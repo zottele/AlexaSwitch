@@ -11,12 +11,7 @@
     #include <pubsubclient.h>
 #endif
 #include "fauxmoESP.h"
-
-// Rename the credentials.sample.h file to credentials.h and 
-// edit it according to your router configuration
 #include "credentials.h"
-
-
 #include <RCSwitch.h>
 
 fauxmoESP fauxmo;
@@ -26,26 +21,24 @@ RCSwitch mySwitch = RCSwitch();
 bool status_todo = false;
 int device [2] =  {-1,-1} ;
 
-
-
-
 // -----------------------------------------------------------------------------
 
 #define SERIAL_BAUDRATE                 115200
 #define LED                             2
 
 #ifdef MQTT
-    // MQTT-Settings
-    //IPAddress mqtt_server= IPAddress(192, 168, 1, 115); // IP-MQTT-Broker
-    const char *mqtt_server = "192.168.1.115";
-    const char *mqtt_username = ""; // "ioBroker"; // MQTT-User
-    const char *mqtt_key = ""; // "iobroker"; // MQTT-Pass
-    const int mqtt_port = 1883;
-    WiFiClient espClient;
-    PubSubClient mqttClient; 
-    const char* PTopic = "haus/keller/esp/schalter"; /* Topic to Publish  */
-    const char* KTopic = "haus/keller/esp/keepAlive"; /* Topic to Publish  */
-    const char* STopic = "haus/keller/esp/outTopic";   /* Topic to Subscripe */
+  // MQTT-Settings
+  WiFiClient espClient;
+  PubSubClient mqttClient; 
+    
+  const char *mqtt_server = "192.168.1.115";
+  const char *mqtt_username = ""; // "ioBroker"; // MQTT-User
+  const char *mqtt_key = ""; // "iobroker"; // MQTT-Pass
+  const int mqtt_port = 1883;
+    
+  const char* PTopic = "haus/keller/esp/schalter"; /* Topic to Publish  */
+  const char* KTopic = "haus/keller/esp/keepAlive"; /* Topic to Publish  */
+  const char* STopic = "haus/keller/esp/outTopic";   /* Topic to Subscripe */
 #endif
 // -----------------------------------------------------------------------------
 // Wifi
@@ -134,9 +127,8 @@ void serverSetup() {
 
 
 void rfSetup() {
-    // Transmitter is connected to Arduino Pin #10  
-    mySwitch.enableTransmit(0);  // Receiver on interrupt 0 => that is pin #2
-
+     
+  mySwitch.enableTransmit(0);  // Receiver on interrupt 0 => that is pin #2
   // Optional set pulse length.
   // mySwitch.setPulseLength(320); 
 }
@@ -161,13 +153,8 @@ void setup() {
     // RF Setup
     rfSetup();
 
-    // Set fauxmoESP to not create an internal TCP server and redirect requests to the server on the defined port
-    // The TCP port must be 80 for gen3 devices (default is 1901)
-    // This has to be done before the call to enable()
     fauxmo.createServer(false);
     fauxmo.setPort(80); // This is required for gen3 devices
-
-    // You have to call enable(true) once you have a WiFi connection
     fauxmo.enable(true);
 
     // Add virtual devices
@@ -185,86 +172,38 @@ void setup() {
                 if (state == true){
                     device [0] = 0;
                     device [1] = 255;
-                    // mySwitch.switchOn("11111","10000");
-                    // mqttClient.publish(PTopic, "Device 0 switched to On");
                 } else {
                     device [0] = 0;
                     device [1] = 0;
-                    // mySwitch.switchOff("11111","10000");    
-                    // mqttClient.publish(PTopic, "Device 0 switched to Off");
                 }
-                // delay(1000);        
                 break;
             case 1:
                 if (state == true){
                     device [0] = 1;
                     device [1] = 255;
-                    // mySwitch.switchOn("11111","01000");
-                    // mqttClient.publish(PTopic, "Device 1 switched to On");
                 } else {
                     device [0] = 1;
                     device [1] = 0;
-                    //mySwitch.switchOff("11111","01000");    
-                    //mqttClient.publish(PTopic, "Device 1 switched to Off");
                 }
-                // delay(1000);        
                 break;
             case 2:
                 if (state == true){
                     device [0] = 2;
                     device [1] = 255;
-                    // mySwitch.switchOn("10111","00010");
-                    //mqttClient.publish(PTopic, "Device 2 switched to On");
                 } else {
                     device [0] = 2;
                     device [1] = 0;
-                    //mySwitch.switchOff("10111","00010");    
-                    //mqttClient.publish(PTopic, "Device 2 switched to Off");
                 }
-                // delay(1000);        
                 break;
         }
-
-/*
-        if (device_id == 0 and state == true) {
-            mySwitch.switchOn("11111","10000");
-            delay(1000);
-        }
-        if (device_id == 1 and state == true){
-            mySwitch.switchOn("11111","01000");
-            delay(1000);
-        }
-        if (device_id == 2 and state == true){
-            mySwitch.switchOn("10111","00010");
-            delay(1000);
-        }
-
-
-        if (device_id == 0 and state == false ){
-            mySwitch.switchOff("11111","10000");
-            delay(1000);
-        }
-        if (device_id == 1 and state == false){
-            mySwitch.switchOff("11111","01000");
-            delay(1000);
-        }
-        if (device_id == 2 and state == false){
-            mySwitch.switchOff("10111","00010");
-            delay(1000);
-        }
-*/
     } );// onSetState
 
 } // setup
 
 void loop() {
 
-    // fauxmoESP uses an async TCP server but a sync UDP server
-    // Therefore, we have to manually poll for UDP packets
     fauxmo.handle();
 
-    // This is a sample code to output free heap every 5 seconds
-    // This is a cheap way to detect memory leaks
     static unsigned long last = millis();
     if (millis() - last > 5000) {
         last = millis();
@@ -317,6 +256,7 @@ void loop() {
                 break;
         }    
         status_todo=false;
+        device[0]=-1;device[1]=-1;
         delay(1000);
     }
 }
